@@ -30,7 +30,7 @@
     .tab { padding:8px 14px; font-size:13px; cursor:pointer; border:none; background:none; color:var(--color-text-secondary); border-bottom:2px solid transparent; margin-bottom:-0.5px; font-family:var(--font-sans); }
     .tab.active { color:#185FA5; border-bottom-color:#185FA5; font-weight:500; }
     .tab.admin-tab { color:#8B5E00; }
-    .tab.admin-tab.active { color:#8B5E00; border-bottom-color:#EF9F27; font-weight: 500; }
+    .tab.admin-tab.active { color:#8B5E00; border-bottom-color:#EF9F27; }
     .section { display:none; }
     .section.active { display:block; }
     .card { background:#fff; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:1.25rem; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,.04); }
@@ -102,6 +102,7 @@
     </div>
   </div>
 
+  <!-- AUTH -->
   <div id="auth-section" style="display:none;">
     <div id="auth-login-view">
       <div class="card" style="max-width:420px;margin:0 auto;">
@@ -156,27 +157,25 @@
     </div>
   </div>
 
+  <!-- LOADING -->
   <div id="loading-section" class="loading"><i class="ti ti-loader" style="font-size:28px;"></i><p style="margin-top:8px;">Chargement…</p></div>
 
+  <!-- MAIN APP -->
   <div id="main-app" style="display:none;">
     <div class="tabs">
-      <button id="tab-btn-emprunter" class="tab active" onclick="switchTab('emprunter',this)"><i class="ti ti-plus"></i> Emprunter</button>
-      <button id="tab-btn-mes-emprunts" class="tab" onclick="switchTab('mes-emprunts',this)"><i class="ti ti-list"></i> Mes emprunts</button>
-      <button id="tab-btn-tableau" class="tab" onclick="switchTab('tableau',this)"><i class="ti ti-table"></i> Tableau général</button>
+      <button class="tab active" onclick="switchTab('emprunter',this)"><i class="ti ti-plus"></i> Emprunter</button>
+      <button class="tab" onclick="switchTab('mes-emprunts',this)"><i class="ti ti-list"></i> Mes emprunts</button>
+      <button class="tab" onclick="switchTab('tableau',this)"><i class="ti ti-table"></i> Tableau général</button>
       <button class="tab admin-tab" id="admin-tab-btn" style="display:none;" onclick="switchTab('admin',this)"><i class="ti ti-shield"></i> Admin</button>
     </div>
 
+    <!-- EMPRUNTER -->
     <div id="tab-emprunter" class="section active">
       <div id="late-alert" class="alert" style="display:none;"><i class="ti ti-alert-triangle"></i><span id="late-alert-text"></span></div>
       <div class="card">
         <p style="font-size:15px;font-weight:500;margin-bottom:1rem;">Nouvel emprunt</p>
         <label>Matériel disponible</label>
-        <div style="display: flex; gap: 8px;">
-            <select id="materiel-select"><option value="">-- Choisir le matériel --</option></select>
-            <button id="quick-add-btn" class="btn" style="display:none; padding: 0 12px;" onclick="switchTab('admin', document.getElementById('admin-tab-btn'))" title="Ajouter du matériel">
-                <i class="ti ti-plus"></i>
-            </button>
-        </div>
+        <select id="materiel-select"><option value="">-- Choisir le matériel --</option></select>
         <p class="err" id="materiel-err">Veuillez sélectionner un matériel.</p>
         <div class="grid2" style="margin-top:0;">
           <div>
@@ -204,8 +203,10 @@
       </div>
     </div>
 
+    <!-- MES EMPRUNTS -->
     <div id="tab-mes-emprunts" class="section"><div id="mes-emprunts-list"></div></div>
 
+    <!-- TABLEAU -->
     <div id="tab-tableau" class="section">
       <div class="metrics">
         <div class="metric"><div class="metric-val" id="m-total">0</div><div class="metric-label">Emprunts actifs</div></div>
@@ -217,3 +218,423 @@
         <button class="filter-btn" onclick="setFilter('surf',this)">Planches</button>
         <button class="filter-btn" onclick="setFilter('combi',this)">Combinaisons</button>
         <button class="filter-btn" onclick="setFilter('retard',this)">En retard</button>
+        <button class="filter-btn" onclick="setFilter('dispo',this)">Disponibles</button>
+      </div>
+      <div class="card" style="padding:.75rem 1.25rem;"><div id="tableau-general"></div></div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="tab-admin" class="section">
+      <div class="admin-warn"><i class="ti ti-shield"></i> <strong>Espace administrateur</strong> — visible uniquement pour vous.</div>
+      <div class="card">
+        <p style="font-size:15px;font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:8px;"><i class="ti ti-surfing"></i> Gérer le matériel</p>
+        <div class="grid3">
+          <div><label>Nom de l'article</label><input type="text" id="new-mat-nom" placeholder="ex: 6'4 N°10" /></div>
+          <div><label>Type</label><select id="new-mat-type"><option value="surf">Planche de surf</option><option value="combi">Combinaison</option></select></div>
+          <div style="display:flex;align-items:flex-end;"><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="addMat()"><i class="ti ti-plus"></i> Ajouter</button></div>
+        </div>
+        <p class="err" id="mat-err" style="margin-top:8px;">Veuillez entrer un nom.</p>
+        <div style="margin-top:1.25rem;">
+          <p style="font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">Planches de surf</p>
+          <div id="admin-surfs-list"></div>
+          <p style="font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;margin-top:1rem;">Combinaisons</p>
+          <div id="admin-combis-list"></div>
+        </div>
+      </div>
+      <div class="card">
+        <p style="font-size:15px;font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:8px;"><i class="ti ti-clipboard-list"></i> Tous les emprunts actifs</p>
+        <div id="admin-emprunts-list"></div>
+      </div>
+      <div class="card" style="border-color:#A32D2D;">
+        <p style="font-size:14px;font-weight:500;color:#A32D2D;margin-bottom:8px;"><i class="ti ti-alert-triangle"></i> Zone de danger</p>
+        <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;">Réinitialiser tous les emprunts (ne supprime pas les comptes ni le matériel).</p>
+        <button class="btn" style="border-color:#A32D2D;color:#A32D2D;" onclick="resetEmprunts()"><i class="ti ti-trash"></i> Réinitialiser les emprunts</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 🔧 REMPLACEZ CES DEUX LIGNES AVEC VOS CLÉS SUPABASE
+// (récupérées à l'étape 4 : Project Settings > API)
+// ============================================================
+const SUPABASE_URL = 'https://boihwzyufcffxjdjosdw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_NFN8QNkuDokR2c1to0BCUQ_6Nym8Am7';
+
+// 🔧 Votre email admin (celui qui voit l'onglet Admin)
+const ADMIN_EMAIL  = 'augustin.lees@2029.icam.fr';
+// ============================================================
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser  = null;
+let materielData = { surfs: [], combis: [] };
+let empruntsData = [];
+let currentFilter = 'tous';
+
+// ── Utilitaires ──────────────────────────────────────────────
+const fmt   = d => new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+const addD  = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r.toISOString().split('T')[0]; };
+const isLate = (ret, returned) => !returned && new Date() > new Date(ret);
+const isC    = a => materielData.combis.some(m=>m.nom===a);
+const isAdm  = () => currentUser && currentUser.email.toLowerCase()===ADMIN_EMAIL.toLowerCase();
+const dispos = () => {
+  const pris = empruntsData.filter(e=>!e.returned).map(e=>e.article);
+  return [...materielData.surfs,...materielData.combis].map(m=>m.nom).filter(a=>!pris.includes(a));
+};
+
+// ── DOM helpers ──────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const showEl = id => { const e=$(id); if(e) e.style.display='flex'; };
+const hideEl = id => { const e=$(id); if(e) e.style.display='none'; };
+
+function togglePw(id, btn) {
+  const inp = $(id);
+  inp.type = inp.type==='text' ? 'password' : 'text';
+  btn.innerHTML = inp.type==='text' ? '<i class="ti ti-eye-off"></i>' : '<i class="ti ti-eye"></i>';
+}
+
+// ── Supabase : chargement des données ───────────────────────
+async function loadMateriel() {
+  const { data } = await db.from('materiel').select('*').order('id');
+  if (data) {
+    materielData.surfs  = data.filter(m=>m.type==='surf');
+    materielData.combis = data.filter(m=>m.type==='combi');
+  }
+}
+
+async function loadEmprunts() {
+  const { data } = await db.from('emprunts').select('*').order('id');
+  if (data) empruntsData = data;
+}
+
+// ── Auth ─────────────────────────────────────────────────────
+async function doRegister() {
+  const email = $('reg-email').value.trim().toLowerCase();
+  const pw    = $('reg-pw').value;
+  const pw2   = $('reg-pw2').value;
+  ['reg-email-err','reg-pw-err','reg-pw2-err','reg-exist-err'].forEach(id=>{ const e=$(id); if(e) e.style.display='none'; });
+  let ok = true;
+  if (!email.split('@')[1]?.endsWith('icam.fr')) { $('reg-email-err').style.display='block'; ok=false; }
+  if (pw.length < 6)  { $('reg-pw-err').style.display='block'; ok=false; }
+  if (pw !== pw2)     { $('reg-pw2-err').style.display='block'; ok=false; }
+  if (!ok) return;
+  const { error } = await db.auth.signUp({ email, password: pw });
+  if (error) {
+    if (error.message.includes('already')) $('reg-exist-err').style.display='block';
+    else alert('Erreur : ' + error.message);
+    return;
+  }
+  showLogin('Compte créé ! Vérifiez votre boîte mail puis connectez-vous.');
+}
+
+async function doLogin() {
+  const email = $('login-email').value.trim().toLowerCase();
+  const pw    = $('login-pw').value;
+  $('login-err').style.display='none';
+  const { error } = await db.auth.signInWithPassword({ email, password: pw });
+  if (error) { $('login-err').style.display='block'; }
+}
+
+async function doLogout() { await db.auth.signOut(); }
+
+// ── Auth state ───────────────────────────────────────────────
+db.auth.onAuthStateChange(async (event, session) => {
+  hideEl('loading-section');
+  if (session) {
+    currentUser = session.user;
+    await loadMateriel();
+    await loadEmprunts();
+    showApp();
+  } else {
+    currentUser = null;
+    showAuth();
+  }
+});
+
+function showApp() {
+  $('auth-section').style.display='none';
+  $('main-app').style.display='block';
+  $('user-info').style.display='flex';
+  $('user-name-display').textContent = currentUser.email.split('@')[0];
+  if (isAdm()) {
+    $('admin-badge').style.display='inline';
+    $('admin-tab-btn').style.display='inline-block';
+  }
+  $('date-emprunt-display').value = fmt(new Date().toISOString().split('T')[0]);
+  updateMaterielSelect();
+  checkLateAlert();
+  switchTab('emprunter', document.querySelector('.tab'));
+}
+
+function showAuth() {
+  $('auth-section').style.display='block';
+  $('main-app').style.display='none';
+  $('user-info').style.display='none';
+  $('admin-badge').style.display='none';
+  $('admin-tab-btn').style.display='none';
+  showLogin();
+}
+
+function showRegister() {
+  $('auth-login-view').style.display='none';
+  $('auth-register-view').style.display='block';
+}
+function showLogin(msg) {
+  $('auth-register-view').style.display='none';
+  $('auth-login-view').style.display='block';
+  if (msg) { $('login-success-text').textContent=msg; $('login-success').style.display='flex'; }
+}
+
+// ── Navigation ───────────────────────────────────────────────
+function switchTab(t, btn) {
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  $('tab-'+t).classList.add('active');
+  if (t==='mes-emprunts') renderMesEmprunts();
+  if (t==='tableau')      renderTableau();
+  if (t==='admin')        renderAdmin();
+}
+
+// ── Matériel select ──────────────────────────────────────────
+function updateMaterielSelect() {
+  const sel = $('materiel-select');
+  const dp  = dispos();
+  sel.innerHTML = '<option value="">-- Choisir le matériel --</option>';
+  if (materielData.surfs.length) {
+    const og = document.createElement('optgroup'); og.label='Planches de surf';
+    materielData.surfs.forEach(m=>{
+      const o=document.createElement('option'); o.value=m.nom;
+      o.text=dp.includes(m.nom)?m.nom:m.nom+' (emprunté)'; o.disabled=!dp.includes(m.nom);
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  }
+  if (materielData.combis.length) {
+    const og = document.createElement('optgroup'); og.label='Combinaisons';
+    materielData.combis.forEach(m=>{
+      const o=document.createElement('option'); o.value=m.nom;
+      o.text=dp.includes(m.nom)?m.nom:m.nom+' (emprunté)'; o.disabled=!dp.includes(m.nom);
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  }
+}
+
+$('duree-select').addEventListener('change', function() {
+  const v = parseInt(this.value);
+  $('date-retour-display').value = v ? fmt(addD(new Date().toISOString().split('T')[0], v)) : '';
+});
+
+// ── Emprunter ────────────────────────────────────────────────
+async function doEmprunter() {
+  const art   = $('materiel-select').value;
+  const duree = parseInt($('duree-select').value);
+  let ok = true;
+  if (!art)   { $('materiel-err').style.display='block'; ok=false; } else $('materiel-err').style.display='none';
+  if (!duree) { $('duree-err').style.display='block'; ok=false; }   else $('duree-err').style.display='none';
+  if (!ok) return;
+  const today  = new Date().toISOString().split('T')[0];
+  const retour = addD(today, duree);
+  const emprunt = { id: Date.now(), user: currentUser.email, article: art, date_emprunt: today, duree, date_retour: retour, returned: false };
+  const { error } = await db.from('emprunts').insert(emprunt);
+  if (error) { alert('Erreur : ' + error.message); return; }
+  empruntsData.push(emprunt);
+  $('materiel-select').value=''; $('duree-select').value=''; $('date-retour-display').value='';
+  updateMaterielSelect();
+  alert('Emprunt enregistré ! Retour prévu le ' + fmt(retour));
+}
+
+// ── Mes emprunts ─────────────────────────────────────────────
+function renderMesEmprunts() {
+  const c = $('mes-emprunts-list');
+  const all = empruntsData.filter(e=>e.user===currentUser.email);
+  if (!all.length) { c.innerHTML='<div class="empty"><i class="ti ti-wave-sine" style="font-size:32px;color:#6b7280;"></i><p style="margin-top:8px;">Aucun emprunt pour le moment</p></div>'; return; }
+  const actifs   = all.filter(e=>!e.returned);
+  const termines = all.filter(e=>e.returned);
+  let html = '';
+  if (actifs.length) {
+    html += '<p style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><i class="ti ti-clock"></i> Emprunts en cours</p>';
+    actifs.forEach(e => {
+      const l = isLate(e.date_retour, e.returned);
+      html += `<div class="card" style="margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div><span class="${isC(e.article)?'badge-combi':'badge-surf'}">${isC(e.article)?'Combinaison':'Surf'}</span><span style="font-size:15px;font-weight:500;margin-left:8px;">${e.article}</span></div>
+          ${l?'<span class="status-late"><i class="ti ti-alert-triangle"></i> En retard</span>':'<span class="status-on-time"><i class="ti ti-check"></i> Dans les temps</span>'}
+        </div>
+        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:#6b7280;">
+          <div><i class="ti ti-calendar"></i> Emprunt : ${fmt(e.date_emprunt)}</div>
+          <div><i class="ti ti-calendar-due"></i> Retour : <span style="color:${l?'#A32D2D':'#27500A'};font-weight:500;">${fmt(e.date_retour)}</span></div>
+        </div>
+        <button class="btn-return" style="margin-top:12px;" onclick="retournerMien(${e.id})"><i class="ti ti-arrow-back-up"></i> Marquer comme rendu</button>
+      </div>`;
+    });
+  }
+  if (termines.length) {
+    html += '<p style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px;margin-top:1rem;display:flex;align-items:center;gap:6px;"><i class="ti ti-history"></i> Historique</p>';
+    termines.slice().reverse().forEach(e => {
+      html += `<div class="card" style="opacity:0.7;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <span style="font-size:14px;">${e.article}</span>
+          <span class="status-returned"><i class="ti ti-check"></i> Rendu le ${fmt(e.returned_date)}</span>
+        </div>
+      </div>`;
+    });
+  }
+  c.innerHTML = html;
+}
+
+async function retournerMien(id) {
+  const idx = empruntsData.findIndex(e=>e.id===id && e.user===currentUser.email);
+  if (idx===-1) return;
+  const today = new Date().toISOString().split('T')[0];
+  await db.from('emprunts').update({ returned:true, returned_date:today }).eq('id', id);
+  empruntsData[idx].returned=true; empruntsData[idx].returned_date=today;
+  updateMaterielSelect(); renderMesEmprunts();
+}
+
+// ── Tableau général ──────────────────────────────────────────
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTableau();
+}
+
+function renderTableau() {
+  const actifs = empruntsData.filter(e=>!e.returned);
+  const dp     = dispos();
+  const l      = actifs.filter(e=>isLate(e.date_retour,e.returned)).length;
+  $('m-total').textContent = actifs.length;
+  $('m-late').textContent  = l;
+  $('m-dispo').textContent = dp.length;
+  const showE = ['tous','surf','combi','retard'].includes(currentFilter);
+  const showD = ['tous','surf','combi','dispo'].includes(currentFilter);
+  let html = '';
+  if (showE) {
+    let f = actifs;
+    if (currentFilter==='surf')   f = actifs.filter(e=>!isC(e.article));
+    if (currentFilter==='combi')  f = actifs.filter(e=>isC(e.article));
+    if (currentFilter==='retard') f = actifs.filter(e=>isLate(e.date_retour,e.returned));
+    if (f.length) {
+      html += `<p class="section-label"><i class="ti ti-arrow-up-right"></i> Matériel emprunté (${f.length})</p>
+      <div class="borrow-header" style="margin-top:4px;"><span>Article</span><span>Utilisateur</span><span>Emprunt</span><span>Retour</span><span></span></div>`;
+      html += f.map(e => {
+        const l2  = isLate(e.date_retour, e.returned);
+        const own = e.user===currentUser.email;
+        return `<div class="borrow-row">
+          <span><span class="${isC(e.article)?'badge-combi':'badge-surf'}">${isC(e.article)?'Combi':'Surf'}</span> ${e.article}</span>
+          <span style="color:#6b7280;font-size:12px;" title="${e.user}">${e.user.split('@')[0]}</span>
+          <span>${fmt(e.date_emprunt)}</span>
+          <span style="color:${l2?'#A32D2D':'#27500A'};font-weight:500;display:flex;align-items:center;gap:4px;">${fmt(e.date_retour)} <i class="ti ${l2?'ti-alert-triangle':'ti-check'}"></i></span>
+          <span>${own?`<button class="btn-danger-sm" onclick="retournerMien(${e.id});renderTableau()"><i class="ti ti-arrow-back-up"></i> Rendu</button>`:'<span style="font-size:11px;color:#6b7280;">—</span>'}</span>
+        </div>`;
+      }).join('');
+    } else if (currentFilter!=='tous') html += '<div class="empty">Aucun emprunt pour ce filtre</div>';
+  }
+  if (showD) {
+    let df = dp;
+    if (currentFilter==='surf')  df = dp.filter(a=>!isC(a));
+    if (currentFilter==='combi') df = dp.filter(a=>isC(a));
+    if (df.length) {
+      html += `<p class="section-label" style="color:#27500A;margin-top:${showE&&actifs.length>0?'16px':'0'};"><i class="ti ti-circle-check"></i> Matériel disponible (${df.length})</p>
+      <div class="borrow-header" style="margin-top:4px;"><span>Article</span><span>Type</span><span></span><span>Statut</span><span></span></div>`;
+      html += df.map(a=>`<div class="dispo-row">
+        <span style="color:#1a1a1a;"><span class="${isC(a)?'badge-combi':'badge-surf'}">${isC(a)?'Combi':'Surf'}</span> ${a}</span>
+        <span>${isC(a)?'Combinaison':'Planche'}</span><span></span>
+        <span class="status-dispo"><i class="ti ti-circle-check"></i> Disponible</span><span></span>
+      </div>`).join('');
+    }
+  }
+  if (!html) html = '<div class="empty">Aucun élément à afficher</div>';
+  $('tableau-general').innerHTML = html;
+}
+
+// ── Admin ────────────────────────────────────────────────────
+function renderAdmin() {
+  if (!isAdm()) return;
+  // Surfs
+  $('admin-surfs-list').innerHTML = materielData.surfs.length
+    ? materielData.surfs.map(m=>{
+        const emp = empruntsData.filter(e=>!e.returned).some(e=>e.article===m.nom);
+        return `<div class="materiel-item"><div class="materiel-item-name"><span class="badge-surf">Surf</span>${m.nom}</div>
+          ${emp?'<span style="font-size:12px;color:#6b7280;">emprunté</span>':
+          `<button class="btn-sm-del" onclick="delMat(${m.id})"><i class="ti ti-trash"></i> Supprimer</button>`}</div>`;
+      }).join('')
+    : '<p style="font-size:13px;color:#6b7280;padding:8px 0;">Aucune planche</p>';
+
+  // Combis
+  $('admin-combis-list').innerHTML = materielData.combis.length
+    ? materielData.combis.map(m=>{
+        const emp = empruntsData.filter(e=>!e.returned).some(e=>e.article===m.nom);
+        return `<div class="materiel-item"><div class="materiel-item-name"><span class="badge-combi">Combi</span>${m.nom}</div>
+          ${emp?'<span style="font-size:12px;color:#6b7280;">empruntée</span>':
+          `<button class="btn-sm-del" onclick="delMat(${m.id})"><i class="ti ti-trash"></i> Supprimer</button>`}</div>`;
+      }).join('')
+    : '<p style="font-size:13px;color:#6b7280;padding:8px 0;">Aucune combinaison</p>';
+
+  // Emprunts
+  const actifs = empruntsData.filter(e=>!e.returned);
+  $('admin-emprunts-list').innerHTML = actifs.length
+    ? actifs.map(e=>{
+        const l = isLate(e.date_retour, e.returned);
+        return `<div class="materiel-item">
+          <div><span class="${isC(e.article)?'badge-combi':'badge-surf'}">${isC(e.article)?'Combi':'Surf'}</span> <strong>${e.article}</strong> — <span style="font-size:12px;color:#6b7280;">${e.user.split('@')[0]}</span></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="color:${l?'#A32D2D':'#27500A'};font-size:12px;">↩ ${fmt(e.date_retour)} ${l?'⚠️':''}</span>
+            <button class="btn-danger-sm" onclick="adminRet(${e.id})"><i class="ti ti-arrow-back-up"></i> Rendu</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<p style="font-size:13px;color:#6b7280;">Aucun emprunt actif</p>';
+}
+
+async function addMat() {
+  const nom  = $('new-mat-nom').value.trim();
+  const type = $('new-mat-type').value;
+  if (!nom) { $('mat-err').style.display='block'; return; }
+  $('mat-err').style.display='none';
+  const { data, error } = await db.from('materiel').insert({ nom, type }).select().single();
+  if (error) { alert('Erreur : '+error.message); return; }
+  if (type==='surf') materielData.surfs.push(data); else materielData.combis.push(data);
+  $('new-mat-nom').value='';
+  updateMaterielSelect(); renderAdmin();
+}
+
+async function delMat(id) {
+  if (!confirm('Supprimer ce matériel ?')) return;
+  await db.from('materiel').delete().eq('id', id);
+  materielData.surfs  = materielData.surfs.filter(m=>m.id!==id);
+  materielData.combis = materielData.combis.filter(m=>m.id!==id);
+  updateMaterielSelect(); renderAdmin();
+}
+
+async function adminRet(id) {
+  const idx = empruntsData.findIndex(e=>e.id===id);
+  if (idx===-1) return;
+  const today = new Date().toISOString().split('T')[0];
+  await db.from('emprunts').update({ returned:true, returned_date:today }).eq('id', id);
+  empruntsData[idx].returned=true; empruntsData[idx].returned_date=today;
+  updateMaterielSelect(); renderAdmin();
+}
+
+async function resetEmprunts() {
+  if (!confirm('Réinitialiser TOUS les emprunts ? Action irréversible.')) return;
+  await db.from('emprunts').delete().neq('id', 0);
+  empruntsData=[];
+  updateMaterielSelect(); renderAdmin();
+}
+
+function checkLateAlert() {
+  const lates = empruntsData.filter(e=>e.user===currentUser.email&&!e.returned&&isLate(e.date_retour,e.returned));
+  if (lates.length) {
+    $('late-alert-text').textContent=`Vous avez ${lates.length} matériel(s) en retard : ${lates.map(e=>e.article).join(', ')}`;
+    $('late-alert').style.display='flex';
+  } else $('late-alert').style.display='none';
+}
+</script>
+</body>
+</html>

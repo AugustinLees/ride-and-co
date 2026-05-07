@@ -30,7 +30,7 @@
     .tab { padding:8px 14px; font-size:13px; cursor:pointer; border:none; background:none; color:var(--color-text-secondary); border-bottom:2px solid transparent; margin-bottom:-0.5px; font-family:var(--font-sans); }
     .tab.active { color:#185FA5; border-bottom-color:#185FA5; font-weight:500; }
     .tab.admin-tab { color:#8B5E00; }
-    .tab.admin-tab.active { color:#8B5E00; border-bottom-color:#EF9F27; }
+    .tab.admin-tab.active { color:#8B5E00; border-bottom-color:#EF9F27; font-weight: 500; }
     .section { display:none; }
     .section.active { display:block; }
     .card { background:#fff; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:1.25rem; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,.04); }
@@ -102,7 +102,6 @@
     </div>
   </div>
 
-  <!-- AUTH -->
   <div id="auth-section" style="display:none;">
     <div id="auth-login-view">
       <div class="card" style="max-width:420px;margin:0 auto;">
@@ -157,25 +156,27 @@
     </div>
   </div>
 
-  <!-- LOADING -->
   <div id="loading-section" class="loading"><i class="ti ti-loader" style="font-size:28px;"></i><p style="margin-top:8px;">Chargement…</p></div>
 
-  <!-- MAIN APP -->
   <div id="main-app" style="display:none;">
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('emprunter',this)"><i class="ti ti-plus"></i> Emprunter</button>
-      <button class="tab" onclick="switchTab('mes-emprunts',this)"><i class="ti ti-list"></i> Mes emprunts</button>
-      <button class="tab" onclick="switchTab('tableau',this)"><i class="ti ti-table"></i> Tableau général</button>
+      <button id="tab-btn-emprunter" class="tab active" onclick="switchTab('emprunter',this)"><i class="ti ti-plus"></i> Emprunter</button>
+      <button id="tab-btn-mes-emprunts" class="tab" onclick="switchTab('mes-emprunts',this)"><i class="ti ti-list"></i> Mes emprunts</button>
+      <button id="tab-btn-tableau" class="tab" onclick="switchTab('tableau',this)"><i class="ti ti-table"></i> Tableau général</button>
       <button class="tab admin-tab" id="admin-tab-btn" style="display:none;" onclick="switchTab('admin',this)"><i class="ti ti-shield"></i> Admin</button>
     </div>
 
-    <!-- EMPRUNTER -->
     <div id="tab-emprunter" class="section active">
       <div id="late-alert" class="alert" style="display:none;"><i class="ti ti-alert-triangle"></i><span id="late-alert-text"></span></div>
       <div class="card">
         <p style="font-size:15px;font-weight:500;margin-bottom:1rem;">Nouvel emprunt</p>
         <label>Matériel disponible</label>
-        <select id="materiel-select"><option value="">-- Choisir le matériel --</option></select>
+        <div style="display: flex; gap: 8px;">
+            <select id="materiel-select"><option value="">-- Choisir le matériel --</option></select>
+            <button id="quick-add-btn" class="btn" style="display:none; padding: 0 12px;" onclick="switchTab('admin', document.getElementById('admin-tab-btn'))" title="Ajouter du matériel">
+                <i class="ti ti-plus"></i>
+            </button>
+        </div>
         <p class="err" id="materiel-err">Veuillez sélectionner un matériel.</p>
         <div class="grid2" style="margin-top:0;">
           <div>
@@ -203,10 +204,8 @@
       </div>
     </div>
 
-    <!-- MES EMPRUNTS -->
     <div id="tab-mes-emprunts" class="section"><div id="mes-emprunts-list"></div></div>
 
-    <!-- TABLEAU -->
     <div id="tab-tableau" class="section">
       <div class="metrics">
         <div class="metric"><div class="metric-val" id="m-total">0</div><div class="metric-label">Emprunts actifs</div></div>
@@ -223,7 +222,6 @@
       <div class="card" style="padding:.75rem 1.25rem;"><div id="tableau-general"></div></div>
     </div>
 
-    <!-- ADMIN -->
     <div id="tab-admin" class="section">
       <div class="admin-warn"><i class="ti ti-shield"></i> <strong>Espace administrateur</strong> — visible uniquement pour vous.</div>
       <div class="card">
@@ -255,16 +253,9 @@
 </div>
 
 <script>
-// ============================================================
-// 🔧 REMPLACEZ CES DEUX LIGNES AVEC VOS CLÉS SUPABASE
-// (récupérées à l'étape 4 : Project Settings > API)
-// ============================================================
 const SUPABASE_URL = 'https://boihwzyufcffxjdjosdw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_NFN8QNkuDokR2c1to0BCUQ_6Nym8Am7';
-
-// 🔧 Votre email admin (celui qui voit l'onglet Admin)
 const ADMIN_EMAIL  = 'augustin.lees@2029.icam.fr';
-// ============================================================
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -274,7 +265,6 @@ let materielData = { surfs: [], combis: [] };
 let empruntsData = [];
 let currentFilter = 'tous';
 
-// ── Utilitaires ──────────────────────────────────────────────
 const fmt   = d => new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
 const addD  = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r.toISOString().split('T')[0]; };
 const isLate = (ret, returned) => !returned && new Date() > new Date(ret);
@@ -285,9 +275,7 @@ const dispos = () => {
   return [...materielData.surfs,...materielData.combis].map(m=>m.nom).filter(a=>!pris.includes(a));
 };
 
-// ── DOM helpers ──────────────────────────────────────────────
-const $  = id => document.getElementById(id);
-const showEl = id => { const e=$(id); if(e) e.style.display='flex'; };
+const $ = id => document.getElementById(id);
 const hideEl = id => { const e=$(id); if(e) e.style.display='none'; };
 
 function togglePw(id, btn) {
@@ -296,7 +284,6 @@ function togglePw(id, btn) {
   btn.innerHTML = inp.type==='text' ? '<i class="ti ti-eye-off"></i>' : '<i class="ti ti-eye"></i>';
 }
 
-// ── Supabase : chargement des données ───────────────────────
 async function loadMateriel() {
   const { data } = await db.from('materiel').select('*').order('id');
   if (data) {
@@ -310,7 +297,6 @@ async function loadEmprunts() {
   if (data) empruntsData = data;
 }
 
-// ── Auth ─────────────────────────────────────────────────────
 async function doRegister() {
   const email = $('reg-email').value.trim().toLowerCase();
   const pw    = $('reg-pw').value;
@@ -340,16 +326,16 @@ async function doLogin() {
 
 async function doLogout() { await db.auth.signOut(); }
 
-// ── Auth state ───────────────────────────────────────────────
 db.auth.onAuthStateChange(async (event, session) => {
-  hideEl('loading-section');
   if (session) {
     currentUser = session.user;
     await loadMateriel();
     await loadEmprunts();
+    hideEl('loading-section');
     showApp();
   } else {
     currentUser = null;
+    hideEl('loading-section');
     showAuth();
   }
 });
@@ -362,11 +348,14 @@ function showApp() {
   if (isAdm()) {
     $('admin-badge').style.display='inline';
     $('admin-tab-btn').style.display='inline-block';
+    $('quick-add-btn').style.display='inline-flex';
   }
   $('date-emprunt-display').value = fmt(new Date().toISOString().split('T')[0]);
   updateMaterielSelect();
   checkLateAlert();
-  switchTab('emprunter', document.querySelector('.tab'));
+  // Force le rendu de l'onglet actif après rafraîchissement
+  const activeTab = document.querySelector('.tab.active').getAttribute('onclick').match(/'([^']+)'/)[1];
+  switchTab(activeTab, document.querySelector('.tab.active'));
 }
 
 function showAuth() {
@@ -388,18 +377,17 @@ function showLogin(msg) {
   if (msg) { $('login-success-text').textContent=msg; $('login-success').style.display='flex'; }
 }
 
-// ── Navigation ───────────────────────────────────────────────
 function switchTab(t, btn) {
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   if (btn) btn.classList.add('active');
   $('tab-'+t).classList.add('active');
+  if (t==='emprunter') updateMaterielSelect();
   if (t==='mes-emprunts') renderMesEmprunts();
   if (t==='tableau')      renderTableau();
   if (t==='admin')        renderAdmin();
 }
 
-// ── Matériel select ──────────────────────────────────────────
 function updateMaterielSelect() {
   const sel = $('materiel-select');
   const dp  = dispos();
@@ -429,7 +417,6 @@ $('duree-select').addEventListener('change', function() {
   $('date-retour-display').value = v ? fmt(addD(new Date().toISOString().split('T')[0], v)) : '';
 });
 
-// ── Emprunter ────────────────────────────────────────────────
 async function doEmprunter() {
   const art   = $('materiel-select').value;
   const duree = parseInt($('duree-select').value);
@@ -445,10 +432,9 @@ async function doEmprunter() {
   empruntsData.push(emprunt);
   $('materiel-select').value=''; $('duree-select').value=''; $('date-retour-display').value='';
   updateMaterielSelect();
-  alert('Emprunt enregistré ! Retour prévu le ' + fmt(retour));
+  alert('Emprunt enregistré !');
 }
 
-// ── Mes emprunts ─────────────────────────────────────────────
 function renderMesEmprunts() {
   const c = $('mes-emprunts-list');
   const all = empruntsData.filter(e=>e.user===currentUser.email);
@@ -496,7 +482,6 @@ async function retournerMien(id) {
   updateMaterielSelect(); renderMesEmprunts();
 }
 
-// ── Tableau général ──────────────────────────────────────────
 function setFilter(f, btn) {
   currentFilter = f;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
@@ -521,120 +506,4 @@ function renderTableau() {
     if (currentFilter==='retard') f = actifs.filter(e=>isLate(e.date_retour,e.returned));
     if (f.length) {
       html += `<p class="section-label"><i class="ti ti-arrow-up-right"></i> Matériel emprunté (${f.length})</p>
-      <div class="borrow-header" style="margin-top:4px;"><span>Article</span><span>Utilisateur</span><span>Emprunt</span><span>Retour</span><span></span></div>`;
-      html += f.map(e => {
-        const l2  = isLate(e.date_retour, e.returned);
-        const own = e.user===currentUser.email;
-        return `<div class="borrow-row">
-          <span><span class="${isC(e.article)?'badge-combi':'badge-surf'}">${isC(e.article)?'Combi':'Surf'}</span> ${e.article}</span>
-          <span style="color:#6b7280;font-size:12px;" title="${e.user}">${e.user.split('@')[0]}</span>
-          <span>${fmt(e.date_emprunt)}</span>
-          <span style="color:${l2?'#A32D2D':'#27500A'};font-weight:500;display:flex;align-items:center;gap:4px;">${fmt(e.date_retour)} <i class="ti ${l2?'ti-alert-triangle':'ti-check'}"></i></span>
-          <span>${own?`<button class="btn-danger-sm" onclick="retournerMien(${e.id});renderTableau()"><i class="ti ti-arrow-back-up"></i> Rendu</button>`:'<span style="font-size:11px;color:#6b7280;">—</span>'}</span>
-        </div>`;
-      }).join('');
-    } else if (currentFilter!=='tous') html += '<div class="empty">Aucun emprunt pour ce filtre</div>';
-  }
-  if (showD) {
-    let df = dp;
-    if (currentFilter==='surf')  df = dp.filter(a=>!isC(a));
-    if (currentFilter==='combi') df = dp.filter(a=>isC(a));
-    if (df.length) {
-      html += `<p class="section-label" style="color:#27500A;margin-top:${showE&&actifs.length>0?'16px':'0'};"><i class="ti ti-circle-check"></i> Matériel disponible (${df.length})</p>
-      <div class="borrow-header" style="margin-top:4px;"><span>Article</span><span>Type</span><span></span><span>Statut</span><span></span></div>`;
-      html += df.map(a=>`<div class="dispo-row">
-        <span style="color:#1a1a1a;"><span class="${isC(a)?'badge-combi':'badge-surf'}">${isC(a)?'Combi':'Surf'}</span> ${a}</span>
-        <span>${isC(a)?'Combinaison':'Planche'}</span><span></span>
-        <span class="status-dispo"><i class="ti ti-circle-check"></i> Disponible</span><span></span>
-      </div>`).join('');
-    }
-  }
-  if (!html) html = '<div class="empty">Aucun élément à afficher</div>';
-  $('tableau-general').innerHTML = html;
-}
-
-// ── Admin ────────────────────────────────────────────────────
-function renderAdmin() {
-  if (!isAdm()) return;
-  // Surfs
-  $('admin-surfs-list').innerHTML = materielData.surfs.length
-    ? materielData.surfs.map(m=>{
-        const emp = empruntsData.filter(e=>!e.returned).some(e=>e.article===m.nom);
-        return `<div class="materiel-item"><div class="materiel-item-name"><span class="badge-surf">Surf</span>${m.nom}</div>
-          ${emp?'<span style="font-size:12px;color:#6b7280;">emprunté</span>':
-          `<button class="btn-sm-del" onclick="delMat(${m.id})"><i class="ti ti-trash"></i> Supprimer</button>`}</div>`;
-      }).join('')
-    : '<p style="font-size:13px;color:#6b7280;padding:8px 0;">Aucune planche</p>';
-
-  // Combis
-  $('admin-combis-list').innerHTML = materielData.combis.length
-    ? materielData.combis.map(m=>{
-        const emp = empruntsData.filter(e=>!e.returned).some(e=>e.article===m.nom);
-        return `<div class="materiel-item"><div class="materiel-item-name"><span class="badge-combi">Combi</span>${m.nom}</div>
-          ${emp?'<span style="font-size:12px;color:#6b7280;">empruntée</span>':
-          `<button class="btn-sm-del" onclick="delMat(${m.id})"><i class="ti ti-trash"></i> Supprimer</button>`}</div>`;
-      }).join('')
-    : '<p style="font-size:13px;color:#6b7280;padding:8px 0;">Aucune combinaison</p>';
-
-  // Emprunts
-  const actifs = empruntsData.filter(e=>!e.returned);
-  $('admin-emprunts-list').innerHTML = actifs.length
-    ? actifs.map(e=>{
-        const l = isLate(e.date_retour, e.returned);
-        return `<div class="materiel-item">
-          <div><span class="${isC(e.article)?'badge-combi':'badge-surf'}">${isC(e.article)?'Combi':'Surf'}</span> <strong>${e.article}</strong> — <span style="font-size:12px;color:#6b7280;">${e.user.split('@')[0]}</span></div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="color:${l?'#A32D2D':'#27500A'};font-size:12px;">↩ ${fmt(e.date_retour)} ${l?'⚠️':''}</span>
-            <button class="btn-danger-sm" onclick="adminRet(${e.id})"><i class="ti ti-arrow-back-up"></i> Rendu</button>
-          </div>
-        </div>`;
-      }).join('')
-    : '<p style="font-size:13px;color:#6b7280;">Aucun emprunt actif</p>';
-}
-
-async function addMat() {
-  const nom  = $('new-mat-nom').value.trim();
-  const type = $('new-mat-type').value;
-  if (!nom) { $('mat-err').style.display='block'; return; }
-  $('mat-err').style.display='none';
-  const { data, error } = await db.from('materiel').insert({ nom, type }).select().single();
-  if (error) { alert('Erreur : '+error.message); return; }
-  if (type==='surf') materielData.surfs.push(data); else materielData.combis.push(data);
-  $('new-mat-nom').value='';
-  updateMaterielSelect(); renderAdmin();
-}
-
-async function delMat(id) {
-  if (!confirm('Supprimer ce matériel ?')) return;
-  await db.from('materiel').delete().eq('id', id);
-  materielData.surfs  = materielData.surfs.filter(m=>m.id!==id);
-  materielData.combis = materielData.combis.filter(m=>m.id!==id);
-  updateMaterielSelect(); renderAdmin();
-}
-
-async function adminRet(id) {
-  const idx = empruntsData.findIndex(e=>e.id===id);
-  if (idx===-1) return;
-  const today = new Date().toISOString().split('T')[0];
-  await db.from('emprunts').update({ returned:true, returned_date:today }).eq('id', id);
-  empruntsData[idx].returned=true; empruntsData[idx].returned_date=today;
-  updateMaterielSelect(); renderAdmin();
-}
-
-async function resetEmprunts() {
-  if (!confirm('Réinitialiser TOUS les emprunts ? Action irréversible.')) return;
-  await db.from('emprunts').delete().neq('id', 0);
-  empruntsData=[];
-  updateMaterielSelect(); renderAdmin();
-}
-
-function checkLateAlert() {
-  const lates = empruntsData.filter(e=>e.user===currentUser.email&&!e.returned&&isLate(e.date_retour,e.returned));
-  if (lates.length) {
-    $('late-alert-text').textContent=`Vous avez ${lates.length} matériel(s) en retard : ${lates.map(e=>e.article).join(', ')}`;
-    $('late-alert').style.display='flex';
-  } else $('late-alert').style.display='none';
-}
-</script>
-</body>
-</html>
+      <div class="borrow-header" style="margin
